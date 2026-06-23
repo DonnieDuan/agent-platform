@@ -48,25 +48,130 @@
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800" x-data="app()" x-cloak>
+    <!-- 登录页面 -->
+    <div x-show="!isLoggedIn" x-transition class="min-h-screen flex items-center justify-center bg-gray-100">
+        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+            <h2 class="text-2xl font-semibold text-center text-primary mb-6">智能研发 Agent 协作平台</h2>
+            
+            <!-- 登录表单 -->
+            <div x-show="!showRegister" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">用户名</label>
+                    <input 
+                        type="text" 
+                        x-model="loginForm.username"
+                        class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="请输入用户名"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">密码</label>
+                    <input 
+                        type="password" 
+                        x-model="loginForm.password"
+                        class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="请输入密码"
+                    >
+                </div>
+                <button 
+                    class="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primaryHover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    @click="login()"
+                    :disabled="loading"
+                >
+                    <span x-show="loading" class="inline-flex items-center gap-2">
+                        <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner"></span>
+                        登录中...
+                    </span>
+                    <span x-show="!loading">登录</span>
+                </button>
+                <p class="text-center text-sm text-gray-600">
+                    还没有账号？
+                    <a class="text-primary cursor-pointer hover:underline" @click="showRegister = true">立即注册</a>
+                </p>
+                <button 
+                    class="w-full py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+                    @click="initAdmin()"
+                >
+                    初始化默认管理员
+                </button>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div x-show="showRegister" x-transition class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">用户名</label>
+                    <input 
+                        type="text" 
+                        x-model="registerForm.username"
+                        class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="请输入用户名"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">邮箱</label>
+                    <input 
+                        type="email" 
+                        x-model="registerForm.email"
+                        class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="请输入邮箱"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">密码</label>
+                    <input 
+                        type="password" 
+                        x-model="registerForm.password"
+                        class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="请输入密码"
+                    >
+                </div>
+                <button 
+                    class="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primaryHover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    @click="register()"
+                    :disabled="loading"
+                >
+                    <span x-show="loading" class="inline-flex items-center gap-2">
+                        <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner"></span>
+                        注册中...
+                    </span>
+                    <span x-show="!loading">注册</span>
+                </button>
+                <p class="text-center text-sm text-gray-600">
+                    已有账号？
+                    <a class="text-primary cursor-pointer hover:underline" @click="showRegister = false">返回登录</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- 主容器 -->
-    <div class="grid grid-cols-[220px_1fr] grid-rows-[60px_1fr] min-h-screen">
+    <div x-show="isLoggedIn" class="grid grid-cols-[220px_1fr] grid-rows-[60px_1fr] min-h-screen">
         
         <!-- 顶部导航 -->
         <header class="col-span-2 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-6">
             <h1 class="text-xl font-semibold text-primary">智能研发 Agent 协作平台</h1>
-            <div class="flex gap-4">
-                <span class="flex items-center gap-2 text-sm text-gray-600">
-                    数据库: <span class="w-2 h-2 rounded-full" :class="health.database === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
-                </span>
-                <span class="flex items-center gap-2 text-sm text-gray-600">
-                    Redis: <span class="w-2 h-2 rounded-full" :class="health.redis === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
-                </span>
-                <span class="flex items-center gap-2 text-sm text-gray-600">
-                    Qdrant: <span class="w-2 h-2 rounded-full" :class="health.qdrant === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
-                </span>
-                <span class="flex items-center gap-2 text-sm text-gray-600">
-                    LLM: <span class="w-2 h-2 rounded-full" :class="health.llm === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
-                </span>
+            <div class="flex gap-4 items-center">
+                <div class="flex gap-4">
+                    <span class="flex items-center gap-2 text-sm text-gray-600">
+                        数据库: <span class="w-2 h-2 rounded-full" :class="health.database === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                    </span>
+                    <span class="flex items-center gap-2 text-sm text-gray-600">
+                        Redis: <span class="w-2 h-2 rounded-full" :class="health.redis === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                    </span>
+                    <span class="flex items-center gap-2 text-sm text-gray-600">
+                        Qdrant: <span class="w-2 h-2 rounded-full" :class="health.qdrant === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                    </span>
+                    <span class="flex items-center gap-2 text-sm text-gray-600">
+                        LLM: <span class="w-2 h-2 rounded-full" :class="health.llm === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                    </span>
+                </div>
+                <div class="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
+                    <span class="text-sm text-gray-600">👤 <span x-text="currentUser?.username"></span></span>
+                    <button 
+                        class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:opacity-80"
+                        @click="logout()"
+                    >退出</button>
+                </div>
             </div>
         </header>
 
@@ -427,6 +532,21 @@
                 currentAgent: 'code-generator',
                 loading: false,
                 
+                // 认证相关
+                isLoggedIn: false,
+                currentUser: null,
+                token: null,
+                showRegister: false,
+                loginForm: {
+                    username: '',
+                    password: ''
+                },
+                registerForm: {
+                    username: '',
+                    email: '',
+                    password: ''
+                },
+                
                 // Agent 相关
                 agentTask: '',
                 agentCode: '',
@@ -473,7 +593,127 @@
                 
                 // 方法
                 init() {
-                    this.checkHealth();
+                    // 检查本地存储的 token
+                    const savedToken = localStorage.getItem('token');
+                    const savedUser = localStorage.getItem('user');
+                    
+                    if (savedToken && savedUser) {
+                        this.token = savedToken;
+                        this.currentUser = JSON.parse(savedUser);
+                        this.isLoggedIn = true;
+                        this.checkHealth();
+                    }
+                },
+                
+                async login() {
+                    if (!this.loginForm.username.trim() || !this.loginForm.password.trim()) {
+                        this.showNotification('请输入用户名和密码', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.loginForm)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(result.detail || '登录失败');
+                        }
+                        
+                        this.token = result.access_token;
+                        this.currentUser = result.user;
+                        this.isLoggedIn = true;
+                        
+                        // 保存到本地存储
+                        localStorage.setItem('token', this.token);
+                        localStorage.setItem('user', JSON.stringify(this.currentUser));
+                        
+                        this.showNotification('登录成功', 'success');
+                        this.checkHealth();
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async register() {
+                    if (!this.registerForm.username.trim() || !this.registerForm.email.trim() || !this.registerForm.password.trim()) {
+                        this.showNotification('请填写完整信息', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/auth/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.registerForm)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(result.detail || '注册失败');
+                        }
+                        
+                        this.showNotification('注册成功，请登录', 'success');
+                        this.showRegister = false;
+                        this.loginForm.username = this.registerForm.username;
+                        this.loginForm.password = this.registerForm.password;
+                        this.registerForm = { username: '', email: '', password: '' };
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async initAdmin() {
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/auth/init-admin', {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(result.detail || '初始化失败');
+                        }
+                        
+                        this.showNotification('管理员创建成功: admin / admin123', 'success');
+                        this.loginForm.username = 'admin';
+                        this.loginForm.password = 'admin123';
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                logout() {
+                    this.isLoggedIn = false;
+                    this.currentUser = null;
+                    this.token = null;
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    this.showNotification('已退出登录', 'success');
+                },
+                
+                getAuthHeaders() {
+                    return {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.token}`
+                    };
                 },
                 
                 switchTab(tab) {

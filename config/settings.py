@@ -74,8 +74,9 @@ class Settings(BaseSettings):
     # 安全配置
     # -------------------------------------------------------------------------
     SECRET_KEY: str = "your-secret-key-here-change-in-production"
+    JWT_SECRET_KEY: str = "your-jwt-secret-key-here-change-in-production"
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_MINUTES: int = 1440
+    JWT_EXPIRATION_HOURS: int = 24
 
     # -------------------------------------------------------------------------
     # 路径配置

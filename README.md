@@ -58,15 +58,45 @@ python main.py
 
 ## API 接口
 
+### 认证接口
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| 用户登录 | POST | /auth/login | 返回 JWT Token |
+| 用户注册 | POST | /auth/register | 创建新用户 |
+| 获取用户信息 | GET | /auth/me | 需要认证 |
+| 初始化管理员 | POST | /auth/init-admin | 仅在无用户时可用 |
+
+### Agent 接口
+
 | 接口 | 方法 | 路径 |
 |------|------|------|
 | 代码生成 | POST | /agent/code/generate |
 | 代码审查 | POST | /agent/code/review |
 | 文档编写 | POST | /agent/document/write |
+
+### 任务接口
+
+| 接口 | 方法 | 路径 |
+|------|------|------|
 | 获取任务列表 | GET | /tasks/ |
 | 创建任务 | POST | /tasks/ |
+| 删除任务 | DELETE | /tasks/{id} |
+
+### 项目接口
+
+| 接口 | 方法 | 路径 |
+|------|------|------|
 | 获取项目列表 | GET | /projects/ |
 | 创建项目 | POST | /projects/ |
+| 删除项目 | DELETE | /projects/{id} |
+
+### 认证说明
+
+1. **首次使用**：点击「初始化默认管理员」创建管理员账号（admin / admin123）
+2. **登录认证**：登录后获取 JWT Token，Token 有效期 24 小时
+3. **Token 存储**：前端自动将 Token 存储在 localStorage
+4. **认证请求**：需要在请求头添加 `Authorization: Bearer <token>`
 
 ## LLM 接入说明
 
@@ -111,13 +141,14 @@ LLM_TEMPERATURE=0.7
 - ✅ Agent 能力：代码生成、审查、文档编写
 - ✅ 任务/项目管理模块
 - ✅ 前端已升级为 Alpine.js + TailwindCSS
-- ⚠️ 无用户认证体系（当前为公开访问）
+- ✅ JWT Token 认证体系（用户登录/注册）
 
 ### 扩展方向
 
-1. **安全与权限**
-   - 集成 OAuth2 / JWT 认证
-   - 实现 RBAC 角色权限模型（管理员/开发者/访客）
+1. **安全与权限** ✅ 已完成
+   - ✅ 已集成 JWT Token 认证
+   - ✅ 支持用户登录/注册
+   - 待实现 RBAC 角色权限模型（管理员/开发者/访客）
 
 2. **前端升级** ✅ 已完成
    - 已采用 Alpine.js + TailwindCSS 轻量方案
