@@ -11,6 +11,20 @@
 - 📁 **项目管理** - 多项目并行管理
 - 🧠 **分层记忆架构** - Qdrant 向量数据库 + Redis 缓存
 
+## 界面预览
+
+### 🤖 Agent 功能
+![Agent 功能](screenshots/agent-features.png)
+
+### 📋 任务管理
+![任务管理](screenshots/task-management.png)
+
+### 📁 项目管理
+![项目管理](screenshots/project-management.png)
+
+### 📊 系统状态
+![系统状态](screenshots/system-status.png)
+
 ## 技术栈
 
 - **后端框架**: FastAPI
