@@ -1,0 +1,48 @@
+# 虚拟环境
+.venv/
+venv/
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# 数据库
+data/
+*.db
+
+# 日志
+logs/
+*.log
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 构建产物
+dist/
+build/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# 测试覆盖
+.coverage
+htmlcov/
+
+# Qdrant 向量数据库存储
+qdrant_storage/
+
+# 其他临时文件
+query
+*.ps1

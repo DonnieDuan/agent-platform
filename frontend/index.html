@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能研发 Agent 协作平台</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <h1 class="logo">智能研发 Agent 协作平台</h1>
+            <div class="status-bar">
+                <span class="status-item" id="db-status">数据库: <span class="status-dot"></span></span>
+                <span class="status-item" id="redis-status">Redis: <span class="status-dot"></span></span>
+                <span class="status-item" id="qdrant-status">Qdrant: <span class="status-dot"></span></span>
+                <span class="status-item" id="llm-status">LLM: <span class="status-dot"></span></span>
+            </div>
+        </header>
+
+        <!-- 侧边栏导航 -->
+        <nav class="sidebar">
+            <ul class="nav-list">
+                <li class="nav-item active" data-tab="agent">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-text">Agent 功能</span>
+                </li>
+                <li class="nav-item" data-tab="tasks">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">任务管理</span>
+                </li>
+                <li class="nav-item" data-tab="projects">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-text">项目管理</span>
+                </li>
+                <li class="nav-item" data-tab="health">
+                    <span class="nav-icon">💚</span>
+                    <span class="nav-text">系统状态</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- Agent 功能面板 -->
+            <section class="tab-content active" id="agent-tab">
+                <div class="panel">
+                    <h2 class="panel-title">Agent 功能</h2>
+                    
+                    <!-- Agent 选择 -->
+                    <div class="agent-selector">
+                        <button class="agent-btn active" data-agent="code-generator">
+                            <span class="agent-icon">💻</span>
+                            <span class="agent-name">代码生成</span>
+                        </button>
+                        <button class="agent-btn" data-agent="code-reviewer">
+                            <span class="agent-icon">🔍</span>
+                            <span class="agent-name">代码审查</span>
+                        </button>
+                        <button class="agent-btn" data-agent="document-writer">
+                            <span class="agent-icon">📝</span>
+                            <span class="agent-name">文档编写</span>
+                        </button>
+                    </div>
+
+                    <!-- 输入区域 -->
+                    <div class="input-section">
+                        <div class="input-group">
+                            <label for="task-input">任务描述</label>
+                            <textarea id="task-input" placeholder="请输入您的任务需求..." rows="4"></textarea>
+                        </div>
+                        
+                        <div class="input-group" id="code-input-group" style="display: none;">
+                            <label for="code-input">代码内容</label>
+                            <textarea id="code-input" placeholder="请输入需要审查的代码..." rows="8"></textarea>
+                        </div>
+                        
+                        <div class="input-group" id="content-input-group" style="display: none;">
+                            <label for="content-input">文档内容</label>
+                            <textarea id="content-input" placeholder="请输入文档相关内容..." rows="8"></textarea>
+                        </div>
+
+                        <button class="btn-primary" id="execute-btn">
+                            <span class="btn-icon">▶</span>
+                            执行任务
+                        </button>
+                    </div>
+
+                    <!-- 输出区域 -->
+                    <div class="output-section">
+                        <h3 class="output-title">执行结果</h3>
+                        <div class="output-content" id="agent-output">
+                            <p class="output-placeholder">等待执行任务...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 任务管理面板 -->
+            <section class="tab-content" id="tasks-tab">
+                <div class="panel">
+                    <h2 class="panel-title">任务管理</h2>
+                    
+                    <!-- 创建任务 -->
+                    <div class="create-section">
+                        <div class="input-group">
+                            <label for="task-title">任务标题</label>
+                            <input type="text" id="task-title" placeholder="输入任务标题">
+                        </div>
+                        <div class="input-group">
+                            <label for="task-desc">任务描述</label>
+                            <textarea id="task-desc" placeholder="输入任务描述" rows="3"></textarea>
+                        </div>
+                        <button class="btn-primary" id="create-task-btn">
+                            <span class="btn-icon">+</span>
+                            创建任务
+                        </button>
+                    </div>
+
+                    <!-- 任务列表 -->
+                    <div class="list-section">
+                        <h3 class="list-title">任务列表</h3>
+                        <div class="task-list" id="task-list">
+                            <p class="list-placeholder">暂无任务</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 项目管理面板 -->
+            <section class="tab-content" id="projects-tab">
+                <div class="panel">
+                    <h2 class="panel-title">项目管理</h2>
+                    
+                    <!-- 创建项目 -->
+                    <div class="create-section">
+                        <div class="input-group">
+                            <label for="project-name">项目名称</label>
+                            <input type="text" id="project-name" placeholder="输入项目名称">
+                        </div>
+                        <div class="input-group">
+                            <label for="project-desc">项目描述</label>
+                            <textarea id="project-desc" placeholder="输入项目描述" rows="3"></textarea>
+                        </div>
+                        <button class="btn-primary" id="create-project-btn">
+                            <span class="btn-icon">+</span>
+                            创建项目
+                        </button>
+                    </div>
+
+                    <!-- 项目列表 -->
+                    <div class="list-section">
+                        <h3 class="list-title">项目列表</h3>
+                        <div class="project-list" id="project-list">
+                            <p class="list-placeholder">暂无项目</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 系统状态面板 -->
+            <section class="tab-content" id="health-tab">
+                <div class="panel">
+                    <h2 class="panel-title">系统状态</h2>
+                    
+                    <div class="health-grid">
+                        <div class="health-card">
+                            <div class="health-icon">🗄️</div>
+                            <div class="health-info">
+                                <h3>数据库</h3>
+                                <p class="health-status" id="health-db">检查中...</p>
+                            </div>
+                        </div>
+                        <div class="health-card">
+                            <div class="health-icon">⚡</div>
+                            <div class="health-info">
+                                <h3>Redis</h3>
+                                <p class="health-status" id="health-redis">检查中...</p>
+                            </div>
+                        </div>
+                        <div class="health-card">
+                            <div class="health-icon">🔮</div>
+                            <div class="health-info">
+                                <h3>Qdrant</h3>
+                                <p class="health-status" id="health-qdrant">检查中...</p>
+                            </div>
+                        </div>
+                        <div class="health-card">
+                            <div class="health-icon">🧠</div>
+                            <div class="health-info">
+                                <h3>LLM 服务</h3>
+                                <p class="health-status" id="health-llm">检查中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-secondary" id="refresh-health-btn">
+                        <span class="btn-icon">🔄</span>
+                        刷新状态
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 加载提示 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">正在处理...</p>
+    </div>
+
+    <!-- 通知提示 -->
+    <div class="notification" id="notification"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
