@@ -2,6 +2,8 @@
 
 基于 FastAPI + DeepSeek LLM 构建的智能研发协作平台。
 
+> **项目状态**: 当前为单机版原型，支持后续扩展 RBAC 权限模型、分布式部署和多 Agent 协同。
+
 ## 功能特性
 
 - 🤖 **代码生成 Agent** - 基于 DeepSeek LLM 自动生成代码
@@ -66,13 +68,83 @@ python main.py
 | 获取项目列表 | GET | /projects/ |
 | 创建项目 | POST | /projects/ |
 
+## LLM 接入说明
+
+### DeepSeek-LLM 接入方式
+
+本项目通过 **API 方式**接入 DeepSeek LLM，使用 LangChain 框架进行封装。
+
+#### 配置要求
+
+1. **API Key**：需在 [DeepSeek 平台](https://platform.deepseek.com/) 注册获取 API Key
+2. **模型选择**：支持 `deepseek-chat`（对话模型）和 `deepseek-code`（代码模型）
+3. **API 基础地址**：`https://api.deepseek.com/v1`
+
+#### 配置示例（.env 文件）
+
+```bash
+# LLM 配置
+LLM_MODEL_NAME=deepseek-chat
+LLM_API_KEY=your_api_key_here
+LLM_API_BASE=https://api.deepseek.com/v1
+LLM_MAX_TOKENS=4096
+LLM_TEMPERATURE=0.7
+```
+
+#### 本地部署说明（可选）
+
+若需本地部署 DeepSeek 模型，硬件要求如下：
+
+| 模型 | 显存要求 | 推荐配置 |
+|------|---------|---------|
+| DeepSeek-R1.5-8B | ≥ 24GB | RTX 4090 / A10 |
+| DeepSeek-R1.5-70B | ≥ 128GB | A100 80GB x 2 |
+| DeepSeek-V3-Coder | ≥ 48GB | RTX A6000 / H100 |
+
+> 本地部署需修改 `agents/` 目录下的 Agent 实现，改用 HuggingFace Transformers 加载模型。
+
+## 项目状态与扩展方向
+
+### 当前状态
+
+- ✅ 单机版原型，核心功能完整
+- ✅ Agent 能力：代码生成、审查、文档编写
+- ✅ 任务/项目管理模块
+- ⚠️ 无用户认证体系（当前为公开访问）
+- ⚠️ 前端为静态 HTML+JS，适合原型展示
+
+### 扩展方向
+
+1. **安全与权限**
+   - 集成 OAuth2 / JWT 认证
+   - 实现 RBAC 角色权限模型（管理员/开发者/访客）
+
+2. **前端升级**
+   - 轻量方案：Alpine.js + TailwindCSS
+   - 中等方案：Vue 3 + Pinia
+   - 重度方案：React + TypeScript + Ant Design
+
+3. **性能与可观测性**
+   - 集成 logging 日志记录
+   - 接入 Prometheus + Grafana 监控
+   - 实现 Agent 超时重试机制
+
+4. **分布式部署**
+   - 使用 Celery 实现异步任务队列
+   - 支持多节点部署和负载均衡
+
 ## 目录结构
 
 ```
 agent-platform/
 ├── main.py                 # 应用入口（FastAPI 启动）
+├── LICENSE                 # MIT 开源协议
+├── pytest.ini              # pytest 测试配置
 ├── config/
 │   └── settings.py         # 全局配置管理（Pydantic Settings）
+├── core/
+│   ├── __init__.py         # 核心模块（错误处理、任务管理）
+│   └── logging_config.py   # 日志配置（文件+控制台输出）
 ├── models/
 │   └── __init__.py         # 数据库模型（SQLAlchemy ORM）
 ├── api/
@@ -93,6 +165,9 @@ agent-platform/
 │   └── redis_store.py      # 缓存（Redis）
 ├── tools/
 │   └── __init__.py         # 工具模块（Git/Docker/CI/CD）
+├── tests/
+│   ├── test_agents.py      # Agent 单元测试
+│   └── test_api.py         # API 集成测试
 ├── frontend/
 │   ├── index.html          # 前端主页面
 │   ├── css/
@@ -104,5 +179,7 @@ agent-platform/
 │   ├── task-management.png # 任务管理截图
 │   ├── project-management.png # 项目管理截图
 │   └── system-status.png   # 系统状态截图
+├── .github/workflows/
+│   └── ci.yml              # GitHub Actions CI 配置
 └── .gitignore              # Git 忽略配置
 ```

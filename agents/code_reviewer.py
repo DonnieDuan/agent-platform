@@ -2,6 +2,9 @@ from agents.base import BaseAgent
 from langchain_openai import ChatOpenAI
 from config.settings import settings
 from typing import Dict, Any
+from core.logging_config import get_logger
+
+logger = get_logger("code_reviewer")
 
 
 class CodeReviewerAgent(BaseAgent):
@@ -16,6 +19,7 @@ class CodeReviewerAgent(BaseAgent):
         )
 
     def execute(self, task: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        logger.info(f"代码审查任务开始: {task[:50]}...")
         code = context.get("code", "") if context else ""
         
         prompt = f"""你是一个专业的代码审查专家。请对以下代码进行全面审查：
@@ -33,6 +37,7 @@ class CodeReviewerAgent(BaseAgent):
 
         try:
             response = self.llm.invoke(prompt)
+            logger.info(f"代码审查任务完成: {task[:50]}...")
             return {
                 "agent": self.name,
                 "task": task,
@@ -40,6 +45,7 @@ class CodeReviewerAgent(BaseAgent):
                 "status": "completed"
             }
         except Exception as e:
+            logger.error(f"代码审查任务失败: {str(e)}")
             return {
                 "agent": self.name,
                 "task": task,

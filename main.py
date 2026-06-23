@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from config.settings import settings
 from api import router
 from pathlib import Path
+from core.logging_config import logger
 
 database_available = False
 db_error_message = ""
@@ -12,12 +13,12 @@ try:
     from models import engine, Base
     Base.metadata.create_all(bind=engine)
     database_available = True
-    print("✅ 数据库连接成功")
+    logger.info("✅ 数据库连接成功")
 except Exception as e:
     database_available = False
     db_error_message = str(e)
-    print(f"⚠️ 数据库连接失败: {e}")
-    print("   注意: 数据库相关功能将不可用，但 Agent 功能仍可使用")
+    logger.warning(f"⚠️ 数据库连接失败: {e}")
+    logger.warning("   注意: 数据库相关功能将不可用，但 Agent 功能仍可使用")
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 

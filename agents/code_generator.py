@@ -2,6 +2,9 @@ from agents.base import BaseAgent
 from langchain_openai import ChatOpenAI
 from config.settings import settings
 from typing import Dict, Any
+from core.logging_config import get_logger
+
+logger = get_logger("code_generator")
 
 
 class CodeGeneratorAgent(BaseAgent):
@@ -16,6 +19,7 @@ class CodeGeneratorAgent(BaseAgent):
         )
 
     def execute(self, task: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        logger.info(f"代码生成任务开始: {task[:50]}...")
         prompt = f"""你是一个专业的代码生成助手。请根据以下需求生成高质量的代码：
 
 需求：{task}
@@ -30,6 +34,7 @@ class CodeGeneratorAgent(BaseAgent):
 
         try:
             response = self.llm.invoke(prompt)
+            logger.info(f"代码生成任务完成: {task[:50]}...")
             return {
                 "agent": self.name,
                 "task": task,
@@ -37,6 +42,7 @@ class CodeGeneratorAgent(BaseAgent):
                 "status": "completed"
             }
         except Exception as e:
+            logger.error(f"代码生成任务失败: {str(e)}")
             return {
                 "agent": self.name,
                 "task": task,

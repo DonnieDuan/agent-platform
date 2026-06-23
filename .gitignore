@@ -39,6 +39,7 @@ build/
 # 测试覆盖
 .coverage
 htmlcov/
+.pytest_cache/
 
 # Qdrant 向量数据库存储
 qdrant_storage/

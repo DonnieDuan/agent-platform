@@ -2,6 +2,9 @@ from agents.base import BaseAgent
 from langchain_openai import ChatOpenAI
 from config.settings import settings
 from typing import Dict, Any
+from core.logging_config import get_logger
+
+logger = get_logger("document_writer")
 
 
 class DocumentWriterAgent(BaseAgent):
@@ -16,6 +19,7 @@ class DocumentWriterAgent(BaseAgent):
         )
 
     def execute(self, task: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+        logger.info(f"文档编写任务开始: {task[:50]}...")
         content = context.get("content", "") if context else ""
         
         prompt = f"""你是一个专业的技术文档编写专家。请根据以下内容编写高质量的技术文档：
@@ -35,6 +39,7 @@ class DocumentWriterAgent(BaseAgent):
 
         try:
             response = self.llm.invoke(prompt)
+            logger.info(f"文档编写任务完成: {task[:50]}...")
             return {
                 "agent": self.name,
                 "task": task,
@@ -42,6 +47,7 @@ class DocumentWriterAgent(BaseAgent):
                 "status": "completed"
             }
         except Exception as e:
+            logger.error(f"文档编写任务失败: {str(e)}")
             return {
                 "agent": self.name,
                 "task": task,

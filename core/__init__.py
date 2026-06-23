@@ -1,9 +1,9 @@
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from datetime import datetime
-import logging
+from core.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger("core")
 
 
 class AppError(Exception):
