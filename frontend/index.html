@@ -4,215 +4,703 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能研发 Agent 协作平台</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- TailwindCSS 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4a90d9',
+                        primaryHover: '#357abd',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        /* 自定义滚动条 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        /* 加载动画 */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
+<body class="bg-gray-100 text-gray-800" x-data="app()" x-cloak>
+    <!-- 主容器 -->
+    <div class="grid grid-cols-[220px_1fr] grid-rows-[60px_1fr] min-h-screen">
+        
         <!-- 顶部导航 -->
-        <header class="header">
-            <h1 class="logo">智能研发 Agent 协作平台</h1>
-            <div class="status-bar">
-                <span class="status-item" id="db-status">数据库: <span class="status-dot"></span></span>
-                <span class="status-item" id="redis-status">Redis: <span class="status-dot"></span></span>
-                <span class="status-item" id="qdrant-status">Qdrant: <span class="status-dot"></span></span>
-                <span class="status-item" id="llm-status">LLM: <span class="status-dot"></span></span>
+        <header class="col-span-2 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-6">
+            <h1 class="text-xl font-semibold text-primary">智能研发 Agent 协作平台</h1>
+            <div class="flex gap-4">
+                <span class="flex items-center gap-2 text-sm text-gray-600">
+                    数据库: <span class="w-2 h-2 rounded-full" :class="health.database === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                </span>
+                <span class="flex items-center gap-2 text-sm text-gray-600">
+                    Redis: <span class="w-2 h-2 rounded-full" :class="health.redis === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                </span>
+                <span class="flex items-center gap-2 text-sm text-gray-600">
+                    Qdrant: <span class="w-2 h-2 rounded-full" :class="health.qdrant === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                </span>
+                <span class="flex items-center gap-2 text-sm text-gray-600">
+                    LLM: <span class="w-2 h-2 rounded-full" :class="health.llm === 'available' ? 'bg-green-500' : 'bg-red-500'"></span>
+                </span>
             </div>
         </header>
 
-        <!-- 侧边栏导航 -->
-        <nav class="sidebar">
-            <ul class="nav-list">
-                <li class="nav-item active" data-tab="agent">
-                    <span class="nav-icon">🤖</span>
-                    <span class="nav-text">Agent 功能</span>
+        <!-- 侧边栏 -->
+        <nav class="bg-white border-r border-gray-200 py-4">
+            <ul class="space-y-1">
+                <li 
+                    class="flex items-center gap-3 px-6 py-3 cursor-pointer transition-all border-l-3"
+                    :class="currentTab === 'agent' ? 'bg-gray-100 border-l-primary text-primary' : 'border-l-transparent hover:bg-gray-50'"
+                    @click="switchTab('agent')"
+                >
+                    <span class="text-lg">🤖</span>
+                    <span class="text-sm font-medium">Agent 功能</span>
                 </li>
-                <li class="nav-item" data-tab="tasks">
-                    <span class="nav-icon">📋</span>
-                    <span class="nav-text">任务管理</span>
+                <li 
+                    class="flex items-center gap-3 px-6 py-3 cursor-pointer transition-all border-l-3"
+                    :class="currentTab === 'tasks' ? 'bg-gray-100 border-l-primary text-primary' : 'border-l-transparent hover:bg-gray-50'"
+                    @click="switchTab('tasks')"
+                >
+                    <span class="text-lg">📋</span>
+                    <span class="text-sm font-medium">任务管理</span>
                 </li>
-                <li class="nav-item" data-tab="projects">
-                    <span class="nav-icon">📁</span>
-                    <span class="nav-text">项目管理</span>
+                <li 
+                    class="flex items-center gap-3 px-6 py-3 cursor-pointer transition-all border-l-3"
+                    :class="currentTab === 'projects' ? 'bg-gray-100 border-l-primary text-primary' : 'border-l-transparent hover:bg-gray-50'"
+                    @click="switchTab('projects')"
+                >
+                    <span class="text-lg">📁</span>
+                    <span class="text-sm font-medium">项目管理</span>
                 </li>
-                <li class="nav-item" data-tab="health">
-                    <span class="nav-icon">💚</span>
-                    <span class="nav-text">系统状态</span>
+                <li 
+                    class="flex items-center gap-3 px-6 py-3 cursor-pointer transition-all border-l-3"
+                    :class="currentTab === 'health' ? 'bg-gray-100 border-l-primary text-primary' : 'border-l-transparent hover:bg-gray-50'"
+                    @click="switchTab('health')"
+                >
+                    <span class="text-lg">💚</span>
+                    <span class="text-sm font-medium">系统状态</span>
                 </li>
             </ul>
         </nav>
 
         <!-- 主内容区域 -->
-        <main class="main-content">
+        <main class="p-6 overflow-y-auto custom-scrollbar">
+            
             <!-- Agent 功能面板 -->
-            <section class="tab-content active" id="agent-tab">
-                <div class="panel">
-                    <h2 class="panel-title">Agent 功能</h2>
+            <section x-show="currentTab === 'agent'" class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-6">Agent 功能</h2>
+                
+                <!-- Agent 选择 -->
+                <div class="flex gap-3 mb-6">
+                    <button 
+                        class="flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+                        :class="currentAgent === 'code-generator' ? 'bg-primary border-primary text-white' : 'bg-gray-100 border-gray-200 hover:border-primary'"
+                        @click="selectAgent('code-generator')"
+                    >
+                        <span class="text-2xl">💻</span>
+                        <span class="text-sm font-medium">代码生成</span>
+                    </button>
+                    <button 
+                        class="flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+                        :class="currentAgent === 'code-reviewer' ? 'bg-primary border-primary text-white' : 'bg-gray-100 border-gray-200 hover:border-primary'"
+                        @click="selectAgent('code-reviewer')"
+                    >
+                        <span class="text-2xl">🔍</span>
+                        <span class="text-sm font-medium">代码审查</span>
+                    </button>
+                    <button 
+                        class="flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+                        :class="currentAgent === 'document-writer' ? 'bg-primary border-primary text-white' : 'bg-gray-100 border-gray-200 hover:border-primary'"
+                        @click="selectAgent('document-writer')"
+                    >
+                        <span class="text-2xl">📝</span>
+                        <span class="text-sm font-medium">文档编写</span>
+                    </button>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">任务描述</label>
+                        <textarea 
+                            x-model="agentTask"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none resize-vertical min-h-24"
+                            :placeholder="agentTaskPlaceholder"
+                            rows="4"
+                        ></textarea>
+                    </div>
                     
-                    <!-- Agent 选择 -->
-                    <div class="agent-selector">
-                        <button class="agent-btn active" data-agent="code-generator">
-                            <span class="agent-icon">💻</span>
-                            <span class="agent-name">代码生成</span>
-                        </button>
-                        <button class="agent-btn" data-agent="code-reviewer">
-                            <span class="agent-icon">🔍</span>
-                            <span class="agent-name">代码审查</span>
-                        </button>
-                        <button class="agent-btn" data-agent="document-writer">
-                            <span class="agent-icon">📝</span>
-                            <span class="agent-name">文档编写</span>
-                        </button>
+                    <!-- 代码审查额外输入 -->
+                    <div x-show="currentAgent === 'code-reviewer'" x-transition>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">代码内容</label>
+                        <textarea 
+                            x-model="agentCode"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none resize-vertical min-h-32"
+                            placeholder="请输入需要审查的代码..."
+                            rows="8"
+                        ></textarea>
+                    </div>
+                    
+                    <!-- 文档编写额外输入 -->
+                    <div x-show="currentAgent === 'document-writer'" x-transition>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">文档内容</label>
+                        <textarea 
+                            x-model="agentContent"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none resize-vertical min-h-32"
+                            placeholder="请输入文档相关内容..."
+                            rows="8"
+                        ></textarea>
                     </div>
 
-                    <!-- 输入区域 -->
-                    <div class="input-section">
-                        <div class="input-group">
-                            <label for="task-input">任务描述</label>
-                            <textarea id="task-input" placeholder="请输入您的任务需求..." rows="4"></textarea>
-                        </div>
-                        
-                        <div class="input-group" id="code-input-group" style="display: none;">
-                            <label for="code-input">代码内容</label>
-                            <textarea id="code-input" placeholder="请输入需要审查的代码..." rows="8"></textarea>
-                        </div>
-                        
-                        <div class="input-group" id="content-input-group" style="display: none;">
-                            <label for="content-input">文档内容</label>
-                            <textarea id="content-input" placeholder="请输入文档相关内容..." rows="8"></textarea>
-                        </div>
+                    <button 
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primaryHover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        @click="executeAgentTask()"
+                        :disabled="loading"
+                    >
+                        <span x-show="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner"></span>
+                        <span x-show="!loading">▶</span>
+                        <span>执行任务</span>
+                    </button>
+                </div>
 
-                        <button class="btn-primary" id="execute-btn">
-                            <span class="btn-icon">▶</span>
-                            执行任务
-                        </button>
-                    </div>
-
-                    <!-- 输出区域 -->
-                    <div class="output-section">
-                        <h3 class="output-title">执行结果</h3>
-                        <div class="output-content" id="agent-output">
-                            <p class="output-placeholder">等待执行任务...</p>
-                        </div>
+                <!-- 输出区域 -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-base font-medium mb-4">执行结果</h3>
+                    <div class="bg-gray-100 rounded-lg p-4 min-h-48 max-h-96 overflow-y-auto custom-scrollbar">
+                        <p x-show="!agentResult" class="text-gray-500 text-center">等待执行任务...</p>
+                        <pre 
+                            x-show="agentResult" 
+                            class="whitespace-pre-wrap break-words"
+                            :class="agentStatus === 'completed' ? 'text-green-600' : 'text-red-600'"
+                            x-text="agentResult"
+                        ></pre>
                     </div>
                 </div>
             </section>
 
             <!-- 任务管理面板 -->
-            <section class="tab-content" id="tasks-tab">
-                <div class="panel">
-                    <h2 class="panel-title">任务管理</h2>
-                    
-                    <!-- 创建任务 -->
-                    <div class="create-section">
-                        <div class="input-group">
-                            <label for="task-title">任务标题</label>
-                            <input type="text" id="task-title" placeholder="输入任务标题">
-                        </div>
-                        <div class="input-group">
-                            <label for="task-desc">任务描述</label>
-                            <textarea id="task-desc" placeholder="输入任务描述" rows="3"></textarea>
-                        </div>
-                        <button class="btn-primary" id="create-task-btn">
-                            <span class="btn-icon">+</span>
-                            创建任务
-                        </button>
+            <section x-show="currentTab === 'tasks'" class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-6">任务管理</h2>
+                
+                <!-- 创建任务 -->
+                <div class="space-y-4 mb-6 pb-6 border-b border-gray-200">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">任务标题</label>
+                        <input 
+                            type="text" 
+                            x-model="newTaskTitle"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                            placeholder="输入任务标题"
+                        >
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">任务描述</label>
+                        <textarea 
+                            x-model="newTaskDesc"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none resize-vertical"
+                            placeholder="输入任务描述"
+                            rows="3"
+                        ></textarea>
+                    </div>
+                    <button 
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primaryHover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        @click="createTask()"
+                        :disabled="loading"
+                    >
+                        <span x-show="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner"></span>
+                        <span x-show="!loading">+</span>
+                        <span>创建任务</span>
+                    </button>
+                </div>
 
-                    <!-- 任务列表 -->
-                    <div class="list-section">
-                        <h3 class="list-title">任务列表</h3>
-                        <div class="task-list" id="task-list">
-                            <p class="list-placeholder">暂无任务</p>
-                        </div>
+                <!-- 任务列表 -->
+                <div>
+                    <h3 class="text-base font-medium mb-4">任务列表</h3>
+                    <div class="space-y-3">
+                        <p x-show="tasks.length === 0" class="text-gray-500 text-center py-6">暂无任务</p>
+                        <template x-for="task in tasks" :key="task.id">
+                            <div class="bg-gray-100 rounded-lg p-4 flex justify-between items-center">
+                                <div>
+                                    <h4 class="text-sm font-medium mb-1" x-text="task.title"></h4>
+                                    <p class="text-xs text-gray-600" x-text="task.description || '无描述'"></p>
+                                    <small class="text-xs text-gray-500" x-text="'创建时间: ' + formatDate(task.created_at)"></small>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <span 
+                                        class="text-xs px-2 py-1 rounded"
+                                        :class="task.status === 'completed' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'"
+                                        x-text="task.status"
+                                    ></span>
+                                    <button 
+                                        class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:opacity-80"
+                                        @click="deleteTask(task.id)"
+                                    >删除</button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </section>
 
             <!-- 项目管理面板 -->
-            <section class="tab-content" id="projects-tab">
-                <div class="panel">
-                    <h2 class="panel-title">项目管理</h2>
-                    
-                    <!-- 创建项目 -->
-                    <div class="create-section">
-                        <div class="input-group">
-                            <label for="project-name">项目名称</label>
-                            <input type="text" id="project-name" placeholder="输入项目名称">
-                        </div>
-                        <div class="input-group">
-                            <label for="project-desc">项目描述</label>
-                            <textarea id="project-desc" placeholder="输入项目描述" rows="3"></textarea>
-                        </div>
-                        <button class="btn-primary" id="create-project-btn">
-                            <span class="btn-icon">+</span>
-                            创建项目
-                        </button>
+            <section x-show="currentTab === 'projects'" class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-6">项目管理</h2>
+                
+                <!-- 创建项目 -->
+                <div class="space-y-4 mb-6 pb-6 border-b border-gray-200">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">项目名称</label>
+                        <input 
+                            type="text" 
+                            x-model="newProjectName"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none"
+                            placeholder="输入项目名称"
+                        >
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">项目描述</label>
+                        <textarea 
+                            x-model="newProjectDesc"
+                            class="w-full p-3 border border-gray-200 rounded-lg focus:border-primary focus:outline-none resize-vertical"
+                            placeholder="输入项目描述"
+                            rows="3"
+                        ></textarea>
+                    </div>
+                    <button 
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primaryHover transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        @click="createProject()"
+                        :disabled="loading"
+                    >
+                        <span x-show="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full spinner"></span>
+                        <span x-show="!loading">+</span>
+                        <span>创建项目</span>
+                    </button>
+                </div>
 
-                    <!-- 项目列表 -->
-                    <div class="list-section">
-                        <h3 class="list-title">项目列表</h3>
-                        <div class="project-list" id="project-list">
-                            <p class="list-placeholder">暂无项目</p>
-                        </div>
+                <!-- 项目列表 -->
+                <div>
+                    <h3 class="text-base font-medium mb-4">项目列表</h3>
+                    <div class="space-y-3">
+                        <p x-show="projects.length === 0" class="text-gray-500 text-center py-6">暂无项目</p>
+                        <template x-for="project in projects" :key="project.id">
+                            <div class="bg-gray-100 rounded-lg p-4 flex justify-between items-center">
+                                <div>
+                                    <h4 class="text-sm font-medium mb-1" x-text="project.name"></h4>
+                                    <p class="text-xs text-gray-600" x-text="project.description || '无描述'"></p>
+                                    <small class="text-xs text-gray-500" x-text="'创建时间: ' + formatDate(project.created_at)"></small>
+                                </div>
+                                <div>
+                                    <button 
+                                        class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:opacity-80"
+                                        @click="deleteProject(project.id)"
+                                    >删除</button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </section>
 
             <!-- 系统状态面板 -->
-            <section class="tab-content" id="health-tab">
-                <div class="panel">
-                    <h2 class="panel-title">系统状态</h2>
-                    
-                    <div class="health-grid">
-                        <div class="health-card">
-                            <div class="health-icon">🗄️</div>
-                            <div class="health-info">
-                                <h3>数据库</h3>
-                                <p class="health-status" id="health-db">检查中...</p>
-                            </div>
-                        </div>
-                        <div class="health-card">
-                            <div class="health-icon">⚡</div>
-                            <div class="health-info">
-                                <h3>Redis</h3>
-                                <p class="health-status" id="health-redis">检查中...</p>
-                            </div>
-                        </div>
-                        <div class="health-card">
-                            <div class="health-icon">🔮</div>
-                            <div class="health-info">
-                                <h3>Qdrant</h3>
-                                <p class="health-status" id="health-qdrant">检查中...</p>
-                            </div>
-                        </div>
-                        <div class="health-card">
-                            <div class="health-icon">🧠</div>
-                            <div class="health-info">
-                                <h3>LLM 服务</h3>
-                                <p class="health-status" id="health-llm">检查中...</p>
-                            </div>
+            <section x-show="currentTab === 'health'" class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-6">系统状态</h2>
+                
+                <!-- 健康状态网格 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-100 rounded-lg p-5 flex items-center gap-4">
+                        <span class="text-3xl">🗄️</span>
+                        <div>
+                            <h3 class="text-sm font-medium mb-1">数据库</h3>
+                            <p 
+                                class="text-xs"
+                                :class="health.database === 'available' ? 'text-green-600' : 'text-red-600'"
+                                x-text="health.database === 'available' ? '正常运行' : health.database"
+                            ></p>
                         </div>
                     </div>
-
-                    <button class="btn-secondary" id="refresh-health-btn">
-                        <span class="btn-icon">🔄</span>
-                        刷新状态
-                    </button>
+                    <div class="bg-gray-100 rounded-lg p-5 flex items-center gap-4">
+                        <span class="text-3xl">⚡</span>
+                        <div>
+                            <h3 class="text-sm font-medium mb-1">Redis</h3>
+                            <p 
+                                class="text-xs"
+                                :class="health.redis === 'available' ? 'text-green-600' : 'text-red-600'"
+                                x-text="health.redis === 'available' ? '正常运行' : health.redis"
+                            ></p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-5 flex items-center gap-4">
+                        <span class="text-3xl">🔮</span>
+                        <div>
+                            <h3 class="text-sm font-medium mb-1">Qdrant</h3>
+                            <p 
+                                class="text-xs"
+                                :class="health.qdrant === 'available' ? 'text-green-600' : 'text-red-600'"
+                                x-text="health.qdrant === 'available' ? '正常运行' : health.qdrant"
+                            ></p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-5 flex items-center gap-4">
+                        <span class="text-3xl">🧠</span>
+                        <div>
+                            <h3 class="text-sm font-medium mb-1">LLM 服务</h3>
+                            <p 
+                                class="text-xs"
+                                :class="health.llm === 'available' ? 'text-green-600' : 'text-red-600'"
+                                x-text="health.llm === 'available' ? '正常运行' : health.llm"
+                            ></p>
+                        </div>
+                    </div>
                 </div>
+
+                <button 
+                    class="inline-flex items-center gap-2 px-5 py-2 bg-gray-100 text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-200 transition-colors"
+                    @click="checkHealth()"
+                >
+                    <span>🔄</span>
+                    <span>刷新状态</span>
+                </button>
             </section>
         </main>
     </div>
 
     <!-- 加载提示 -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">正在处理...</p>
+    <div 
+        x-show="loading" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-black/50 flex flex-col items-center justify-center gap-4 z-50"
+    >
+        <div class="w-10 h-10 border-3 border-gray-300 border-t-primary rounded-full spinner"></div>
+        <p class="text-white text-sm">正在处理...</p>
     </div>
 
     <!-- 通知提示 -->
-    <div class="notification" id="notification"></div>
+    <div 
+        x-show="notification.show" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform -translate-y-2"
+        x-transition:enter-end="opacity-100 transform translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform translate-y-0"
+        x-transition:leave-end="opacity-0 transform -translate-y-2"
+        class="fixed top-20 right-6 px-6 py-3 rounded-lg text-sm z-50"
+        :class="notification.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'"
+        x-text="notification.message"
+    ></div>
 
-    <script src="/static/js/app.js"></script>
+    <!-- Alpine.js 应用逻辑 -->
+    <script>
+        function app() {
+            return {
+                // 状态
+                currentTab: 'agent',
+                currentAgent: 'code-generator',
+                loading: false,
+                
+                // Agent 相关
+                agentTask: '',
+                agentCode: '',
+                agentContent: '',
+                agentResult: '',
+                agentStatus: '',
+                
+                // 任务相关
+                tasks: [],
+                newTaskTitle: '',
+                newTaskDesc: '',
+                
+                // 项目相关
+                projects: [],
+                newProjectName: '',
+                newProjectDesc: '',
+                
+                // 健康状态
+                health: {
+                    database: '检查中...',
+                    redis: '检查中...',
+                    qdrant: '检查中...',
+                    llm: '检查中...'
+                },
+                
+                // 通知
+                notification: {
+                    show: false,
+                    message: '',
+                    type: 'success'
+                },
+                
+                // 计算属性
+                agentTaskPlaceholder() {
+                    if (this.currentAgent === 'code-generator') {
+                        return '请描述您需要生成的代码功能...';
+                    } else if (this.currentAgent === 'code-reviewer') {
+                        return '请描述审查要求...';
+                    } else if (this.currentAgent === 'document-writer') {
+                        return '请输入文档主题...';
+                    }
+                    return '请输入您的任务需求...';
+                },
+                
+                // 方法
+                init() {
+                    this.checkHealth();
+                },
+                
+                switchTab(tab) {
+                    this.currentTab = tab;
+                    if (tab === 'tasks') {
+                        this.loadTasks();
+                    } else if (tab === 'projects') {
+                        this.loadProjects();
+                    } else if (tab === 'health') {
+                        this.checkHealth();
+                    }
+                },
+                
+                selectAgent(agent) {
+                    this.currentAgent = agent;
+                    this.agentResult = '';
+                    this.agentStatus = '';
+                },
+                
+                async executeAgentTask() {
+                    if (!this.agentTask.trim()) {
+                        this.showNotification('请输入任务描述', 'error');
+                        return;
+                    }
+                    
+                    if (this.currentAgent === 'code-reviewer' && !this.agentCode.trim()) {
+                        this.showNotification('请输入需要审查的代码', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    this.agentResult = '正在执行...';
+                    this.agentStatus = '';
+                    
+                    try {
+                        let url = '';
+                        let context = {};
+                        
+                        if (this.currentAgent === 'code-generator') {
+                            url = '/agent/code/generate';
+                        } else if (this.currentAgent === 'code-reviewer') {
+                            url = '/agent/code/review';
+                            context = { code: this.agentCode };
+                        } else if (this.currentAgent === 'document-writer') {
+                            url = '/agent/document/write';
+                            context = { content: this.agentContent };
+                        }
+                        
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ task: this.agentTask, context })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(result.error || result.detail || '请求失败');
+                        }
+                        
+                        this.agentResult = result.result;
+                        this.agentStatus = result.status;
+                        this.showNotification('任务执行成功', 'success');
+                    } catch (error) {
+                        this.agentResult = error.message;
+                        this.agentStatus = 'failed';
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async loadTasks() {
+                    try {
+                        const response = await fetch('/tasks/');
+                        const tasks = await response.json();
+                        this.tasks = tasks || [];
+                    } catch (error) {
+                        this.tasks = [];
+                    }
+                },
+                
+                async createTask() {
+                    if (!this.newTaskTitle.trim()) {
+                        this.showNotification('请输入任务标题', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/tasks/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: this.newTaskTitle,
+                                description: this.newTaskDesc
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || error.detail || '创建失败');
+                        }
+                        
+                        this.showNotification('任务创建成功', 'success');
+                        this.newTaskTitle = '';
+                        this.newTaskDesc = '';
+                        this.loadTasks();
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async deleteTask(id) {
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch(`/tasks/${id}`, { method: 'DELETE' });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || error.detail || '删除失败');
+                        }
+                        
+                        this.showNotification('任务删除成功', 'success');
+                        this.loadTasks();
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async loadProjects() {
+                    try {
+                        const response = await fetch('/projects/');
+                        const projects = await response.json();
+                        this.projects = projects || [];
+                    } catch (error) {
+                        this.projects = [];
+                    }
+                },
+                
+                async createProject() {
+                    if (!this.newProjectName.trim()) {
+                        this.showNotification('请输入项目名称', 'error');
+                        return;
+                    }
+                    
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch('/projects/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: this.newProjectName,
+                                description: this.newProjectDesc
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || error.detail || '创建失败');
+                        }
+                        
+                        this.showNotification('项目创建成功', 'success');
+                        this.newProjectName = '';
+                        this.newProjectDesc = '';
+                        this.loadProjects();
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async deleteProject(id) {
+                    this.loading = true;
+                    
+                    try {
+                        const response = await fetch(`/projects/${id}`, { method: 'DELETE' });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.error || error.detail || '删除失败');
+                        }
+                        
+                        this.showNotification('项目删除成功', 'success');
+                        this.loadProjects();
+                    } catch (error) {
+                        this.showNotification(error.message, 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async checkHealth() {
+                    try {
+                        const response = await fetch('/health');
+                        const health = await response.json();
+                        this.health = health;
+                    } catch (error) {
+                        this.showNotification('健康检查失败', 'error');
+                    }
+                },
+                
+                showNotification(message, type = 'success') {
+                    this.notification.message = message;
+                    this.notification.type = type;
+                    this.notification.show = true;
+                    
+                    setTimeout(() => {
+                        this.notification.show = false;
+                    }, 3000);
+                },
+                
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    const date = new Date(dateString);
+                    return date.toLocaleString('zh-CN');
+                }
+            };
+        }
+    </script>
 </body>
 </html>
