@@ -67,3 +67,42 @@ python main.py
 | 创建项目 | POST | /projects/ |
 
 ## 目录结构
+
+```
+agent-platform/
+├── main.py                 # 应用入口（FastAPI 启动）
+├── config/
+│   └── settings.py         # 全局配置管理（Pydantic Settings）
+├── models/
+│   └── __init__.py         # 数据库模型（SQLAlchemy ORM）
+├── api/
+│   ├── __init__.py         # API 路由聚合
+│   ├── agent_router.py     # Agent 相关接口
+│   ├── task_router.py      # 任务管理接口
+│   └── project_router.py   # 项目管理接口
+├── schemas/
+│   └── __init__.py         # 数据校验模型（Pydantic）
+├── agents/
+│   ├── base.py             # Agent 抽象基类
+│   ├── code_generator.py   # 代码生成 Agent
+│   ├── code_reviewer.py    # 代码审查 Agent
+│   └── document_writer.py  # 文档编写 Agent
+├── memory/
+│   ├── memory_manager.py   # 记忆管理器
+│   ├── vector_store.py     # 向量数据库（Qdrant）
+│   └── redis_store.py      # 缓存（Redis）
+├── tools/
+│   └── __init__.py         # 工具模块（Git/Docker/CI/CD）
+├── frontend/
+│   ├── index.html          # 前端主页面
+│   ├── css/
+│   │   └── style.css       # 样式文件
+│   └── js/
+│       └── app.js          # 前端逻辑
+├── screenshots/
+│   ├── agent-features.png  # Agent 功能截图
+│   ├── task-management.png # 任务管理截图
+│   ├── project-management.png # 项目管理截图
+│   └── system-status.png   # 系统状态截图
+└── .gitignore              # Git 忽略配置
+```
