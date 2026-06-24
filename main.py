@@ -14,6 +14,26 @@ try:
     Base.metadata.create_all(bind=engine)
     database_available = True
     logger.info("✅ 数据库连接成功")
+    
+    from models import SessionLocal
+    from models import User
+    from core.auth import get_password_hash
+    
+    db = SessionLocal()
+    existing_admin = db.query(User).filter(User.username == "admin").first()
+    if not existing_admin:
+        hashed_password = get_password_hash("admin123")
+        admin = User(
+            username="admin",
+            email="admin@example.com",
+            hashed_password=hashed_password,
+            is_active=True,
+            is_admin=True
+        )
+        db.add(admin)
+        db.commit()
+        logger.info("✅ 默认管理员创建成功: admin / admin123")
+    db.close()
 except Exception as e:
     database_available = False
     db_error_message = str(e)

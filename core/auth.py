@@ -12,7 +12,7 @@ from core.logging_config import get_logger
 logger = get_logger("auth")
 
 # 密码加密上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 # HTTP Bearer 认证
 security = HTTPBearer()
