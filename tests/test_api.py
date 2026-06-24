@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch, Mock
 from fastapi.testclient import TestClient
 from main import app
 
@@ -22,7 +23,12 @@ class TestRootEndpoint:
 
 
 class TestAgentEndpoints:
-    def test_code_generate_endpoint(self):
+    @patch("agents.code_generator.ChatOpenAI")
+    def test_code_generate_endpoint(self, mock_chat):
+        mock_response = Mock()
+        mock_response.content = "print('hello')"
+        mock_chat.return_value.invoke.return_value = mock_response
+        
         response = client.post(
             "/agent/code/generate",
             json={"task": "print('hello')", "context": {}}
@@ -30,7 +36,12 @@ class TestAgentEndpoints:
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
 
-    def test_code_review_endpoint(self):
+    @patch("agents.code_reviewer.ChatOpenAI")
+    def test_code_review_endpoint(self, mock_chat):
+        mock_response = Mock()
+        mock_response.content = "代码审查完成"
+        mock_chat.return_value.invoke.return_value = mock_response
+        
         response = client.post(
             "/agent/code/review",
             json={"task": "def hello(): return 'hello'", "context": {}}
@@ -38,13 +49,34 @@ class TestAgentEndpoints:
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
 
-    def test_document_write_endpoint(self):
+    @patch("agents.document_writer.ChatOpenAI")
+    def test_document_write_endpoint(self, mock_chat):
+        mock_response = Mock()
+        mock_response.content = "文档编写完成"
+        mock_chat.return_value.invoke.return_value = mock_response
+        
         response = client.post(
             "/agent/document/write",
             json={"task": "编写文档", "context": {}}
         )
         assert response.status_code == 200
         assert isinstance(response.json(), dict)
+
+
+class TestAuthEndpoints:
+    def test_login_endpoint(self):
+        response = client.post(
+            "/auth/login",
+            json={"username": "admin", "password": "admin123"}
+        )
+        assert response.status_code == 200 or response.status_code == 401
+
+    def test_register_endpoint(self):
+        response = client.post(
+            "/auth/register",
+            json={"username": "testuser", "email": "test@example.com", "password": "test123"}
+        )
+        assert response.status_code == 200 or response.status_code == 400
 
 
 class TestTaskEndpoints:
